@@ -1,0 +1,7 @@
+Port = 9992
+
+[DB]
+Host = "localhost"
+Port = 27017
+Database = "dstorage"
+Collection = "files"
