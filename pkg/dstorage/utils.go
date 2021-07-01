@@ -1,5 +1,10 @@
 package dstorage
 
+import (
+	"crypto/sha1"
+	"encoding/base64"
+)
+
 func splitFile(file []byte, noParts int) [][]byte {
 	chunks := make([][]byte, 0)
 	chunkSize := (len(file) + noParts - 1) / noParts
@@ -23,4 +28,20 @@ func mergeChunks(chunks *map[int][]byte) []byte {
 	}
 
 	return file
+}
+
+func calculateHash(hh []byte) string {
+	hasher := sha1.New()
+	hasher.Write(hh)
+	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+	return sha
+}
+
+func checkChunks(chunks map[int][]byte, hashes []string) bool {
+	for i, v := range chunks {
+		if hashes[i] != calculateHash(v) {
+			return false
+		}
+	}
+	return true
 }
