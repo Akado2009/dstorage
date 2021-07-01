@@ -20,6 +20,15 @@ func (s *server) CheckAndSetup() error {
 	}
 }
 
-func (s *server) PutPart(part []byte, name string) error {
-	return ioutil.WriteFile(fmt.Sprintf("%s", name), part, fs.ModePerm)
+func (s *server) PutPart(part []byte, name string, errs *chan error) {
+	*errs <- ioutil.WriteFile(fmt.Sprintf("%s", name), part, fs.ModePerm)
+}
+
+func (s *server) GetPart(name string, index int, chunks map[int][]byte, errs *chan error) {
+	b, err := ioutil.ReadFile(name)
+	if err != nil {
+		*errs <- err
+		return
+	}
+	chunks[index] = b
 }

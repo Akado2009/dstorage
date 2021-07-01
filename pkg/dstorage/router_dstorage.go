@@ -18,6 +18,7 @@ type RouterDStorage struct {
 func NewRouterDStorage(ds *DStorage) *RouterDStorage {
 	r := mux.NewRouter()
 	r.Path("/upload").Methods("PUT").HandlerFunc(uploadFile(ds))
+	r.Path("/download/{name}").Methods("GET").HandlerFunc(getFile(ds))
 	return &RouterDStorage{
 		Router: r,
 		ds:     ds,
@@ -32,7 +33,7 @@ func uploadFile(ds *DStorage) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Printf("Error uploading file: %v", err)
 		}
-		file, _, err := r.FormFile("fileupload")
+		file, header, err := r.FormFile("fileupload")
 		defer file.Close()
 
 		if err != nil {
@@ -50,18 +51,22 @@ func uploadFile(ds *DStorage) http.HandlerFunc {
 			log.Printf("Error uploading file: %v", err)
 		}
 
-		if err := ds.UploadFile(buf.Bytes()); err != nil {
+		if err := ds.UploadFile(buf.Bytes(), header.Filename); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Printf("Error uploading file: %v", err)
 		}
 	}
 }
 
-func uploadFIle(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(5 * 1024 * 1024)
-	if err != nil {
-		panic(err)
+func getFile(ds *DStorage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		file, err := ds.GetFile(vars["name"])
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error uploading file: %v", err)
+		}
+		// не помню, как вернуть, гуглить лень
+		fmt.Println(file)
 	}
-
-	fmt.Println(r.FormValue("fileupload"))
 }
